@@ -1,0 +1,56 @@
+name: Run MongoDB Server
+description: Runs MongoDB Server using a method appropriate for the target platform
+inputs:
+  connection-string-name:
+    description: Name of the output environment variable that will receive the connection string
+    required: true
+
+  mongodb-replica-set:
+    description: "MongoDB replica set name (no replica set by default)"
+    required: false
+    default: ""
+
+  mongodb-port:
+    description: "MongoDB port to use (default 27017)"
+    required: false
+    default: 27017
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install MongoDB Server (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $databaseServiceName = "MongoDB$(Get-Random)"
+        $databaseRootDirectory = "D:\temp\$databaseServiceName"
+        $databaseDataDirectory = "$databaseRootDirectory\data"
+        $databaseLogsDirectory = "$databaseRootDirectory\logs"
+        mkdir $databaseRootDirectory > $null
+        mkdir $databaseDataDirectory > $null
+        mkdir $databaseLogsDirectory > $null
+
+        $installServiceCommand = "mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
+        $replicaSet = "${{ inputs.mongodb-replica-set }}"
+        if($replicaSet) {
+          $installServiceCommand = $installServiceCommand + ' --replSet $replicaSet'
+        }
+
+        Invoke-Expression $installServiceCommand
+        net start $databaseServiceName
+
+        if($replicaSet) {
+          mongo "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'
+        }
+
+    - name: Start MongoDB Server (Linux)
+      if: runner.os == 'Linux'
+      uses: supercharge/mongodb-github-action@1.7.0
+      with:
+        mongodb-replica-set: ${{ inputs.mongodb-replica-set }}
+        mongodb-port: ${{ inputs.mongodb-port }}
+    - name: Setup Connection string
+      shell: pwsh
+      run: |
+        echo "Setting environment variable ${{ inputs.connection-string-name }} to MongoDB connection string..."
+        echo "${{ inputs.connection-string-name }}=mongodb://127.0.0.1:${{ inputs.mongodb-port }}" >> $Env:GITHUB_ENV

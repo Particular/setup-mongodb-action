@@ -1,0 +1,37 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+jobs:
+  ci:
+    runs-on: ${{ matrix. os }}
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-2019
+          - name: Linux
+            os: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Run
+        uses: ./
+        with:
+          connection-string-name: MongoDBConnectionString
+          mongodb-port: 27018
+          mongodb-replica-set: "tr0"
+      - name: Check result
+        shell: pwsh
+        run: |
+          $connstr = $Env:MongoDBConnectionString
+          Write-Host "Connection String: $connstr"
+
+          $result = mongo "$connstr"
+          echo $result
