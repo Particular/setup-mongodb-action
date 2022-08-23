@@ -3,7 +3,8 @@ description: Runs MongoDB Server using a method appropriate for the target platf
 inputs:
   connection-string-name:
     description: Name of the output environment variable that will receive the connection string
-    required: true
+    required: false
+    default: "MongoDBConnectionString"
 
   mongodb-replica-set:
     description: "MongoDB replica set name (no replica set by default)"
