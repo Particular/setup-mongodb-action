@@ -50,6 +50,7 @@ runs:
       with:
         mongodb-replica-set: ${{ inputs.mongodb-replica-set }}
         mongodb-port: ${{ inputs.mongodb-port }}
+        mongodb-version: "5"
     - name: Setup Connection string
       shell: pwsh
       run: |
