@@ -27,6 +27,7 @@ jobs:
           connection-string-name: MongoDBConnectionString
           mongodb-port: 27018
           mongodb-replica-set: "tr0"
+          mongodb-version: "6.0"
       - name: Check result
         shell: pwsh
         run: |
