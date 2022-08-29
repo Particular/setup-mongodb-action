@@ -30,6 +30,8 @@ runs:
         mkdir $databaseRootDirectory > $null
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
+        
+        choco install mongodb --version=5.3.2 --params="'/dataPath:$databaseDataDirectory /logPath:$databaseLogsDirectory'"
 
         $installServiceCommand = "mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
