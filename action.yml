@@ -33,7 +33,7 @@ runs:
         
         choco install mongodb --version=5.3.2
 
-        $installServiceCommand = "$env:ChocolateyInstall\lib\mongodb\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
+        $installServiceCommand = ". \$env:ChocolateyInstall\lib\mongodb\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
         if($replicaSet) {
           $installServiceCommand = $installServiceCommand + ' --replSet $replicaSet'
@@ -43,7 +43,7 @@ runs:
         net start $databaseServiceName
 
         if($replicaSet) {
-          $env:ChocolateyInstall\lib\mongodb\mongo "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'
+          . \$env:ChocolateyInstall\lib\mongodb\mongo "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'
         }
 
     - name: Start MongoDB Server (Linux)
