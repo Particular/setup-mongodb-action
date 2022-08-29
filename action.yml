@@ -10,6 +10,11 @@ inputs:
     description: "MongoDB replica set name (no replica set by default)"
     required: false
     default: ""
+    
+  mongodb-version:
+    description: "MongoDB version (default 5.0.11)"
+    required: false
+    default: "5.0.11"  
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
@@ -31,9 +36,12 @@ runs:
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
         
-        choco install mongodb --version=5.3.2 -y
+        $version = [Version]::new(${{ inputs.mongodb-version }})
+        $databaseBinDirectory = "C:\'Program Files'\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
+        
+        choco install mongodb --version="${{ inputs.mongodb-version }}" -y
 
-        $installServiceCommand = "C:\'Program Files'\MongoDB\Server\5.3\bin\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
+        $installServiceCommand = "$databaseBinDirectory\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
         if($replicaSet) {
           $installServiceCommand = $installServiceCommand + ' --replSet $replicaSet'
@@ -43,7 +51,7 @@ runs:
         net start $databaseServiceName
 
         if($replicaSet) {
-          Invoke-Expression "C:\'Program Files'\MongoDB\Server\5.3\bin\mongo ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval 'rs.initiate()'"
+          Invoke-Expression "$databaseBinDirectory\mongo ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval 'rs.initiate()'"
         }
 
     - name: Start MongoDB Server (Linux)
@@ -52,7 +60,7 @@ runs:
       with:
         mongodb-replica-set: ${{ inputs.mongodb-replica-set }}
         mongodb-port: ${{ inputs.mongodb-port }}
-        mongodb-version: "5"
+        mongodb-version: ${{ inputs.mongodb-version }}
     - name: Setup Connection string
       shell: pwsh
       run: |
