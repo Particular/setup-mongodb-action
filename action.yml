@@ -36,10 +36,10 @@ runs:
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
         
-        $version = [Version]::new(${{ inputs.mongodb-version }})
+        $version = [Version]::new("${{ inputs.mongodb-version }}")
         $databaseBinDirectory = "C:\'Program Files'\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
         
-        choco install mongodb --version="${{ inputs.mongodb-version }}" -y
+        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y
 
         $installServiceCommand = "$databaseBinDirectory\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
