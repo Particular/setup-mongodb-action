@@ -56,7 +56,7 @@ runs:
 
     - name: Start MongoDB Server (Linux)
       if: runner.os == 'Linux'
-      uses: supercharge/mongodb-github-action@1.8.0
+      uses: supercharge/mongodb-github-action@1.9.0
       with:
         mongodb-replica-set: ${{ inputs.mongodb-replica-set }}
         mongodb-port: ${{ inputs.mongodb-port }}
