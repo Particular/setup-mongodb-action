@@ -51,7 +51,7 @@ runs:
         net start $databaseServiceName
 
         if($replicaSet) {
-          $initiateReplicaSetCommand = "$databaseBinDirectory\mongod "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'"
+          $initiateReplicaSetCommand = "$databaseBinDirectory\mongo "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'"
           Invoke-Expression $initiateReplicaSetCommand
         }
 
