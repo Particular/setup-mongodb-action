@@ -42,7 +42,7 @@ runs:
         choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y
 
         $installServiceCommand = @'
-        & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
+        & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
         '@
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
         if($replicaSet) {
@@ -54,7 +54,7 @@ runs:
 
         if($replicaSet) {
           $exec = @'
-          & "$databaseBinDirectory\mongo.exe" "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'"
+          & "$databaseBinDirectory\mongo.exe" "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval 'rs.initiate()'
           '@
           Invoke-Expression $exec
         }
