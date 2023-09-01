@@ -37,7 +37,7 @@ runs:
         mkdir $databaseLogsDirectory > $null
         
         $version = [Version]::new("${{ inputs.mongodb-version }}")
-        $databaseBinDirectory = "C:\'Program Files'\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
+        $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
         
         choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y
 
