@@ -52,7 +52,7 @@ runs:
         net start $databaseServiceName
 
         if($replicaSet) {
-          & "$databaseBinDirectory\mongo.exe" --host "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()""
+          & "$databaseBinDirectory\mongo.exe" --host "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
         }
 
     - name: Start MongoDB Server (Linux)
