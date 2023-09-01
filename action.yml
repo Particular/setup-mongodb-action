@@ -51,7 +51,7 @@ runs:
         net start $databaseServiceName
 
         if($replicaSet) {
-          Invoke-Expression "$databaseBinDirectory\mongo ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval 'rs.initiate()'"
+          Invoke-Expression "$databaseBinDirectory\mongosh ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval 'rs.initiate()'"
         }
 
     - name: Start MongoDB Server (Linux)
