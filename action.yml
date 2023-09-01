@@ -41,13 +41,13 @@ runs:
         
         choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y
 
-        $installServiceCommand = """$databaseBinDirectory\mongod.exe"" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
+        $installServiceCommand = "$databaseBinDirectory\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
         if($replicaSet) {
           $installServiceCommand = $installServiceCommand + ' --replSet $replicaSet'
         }
 
-        & $installServiceCommand
+        Invoke-Expression $installServiceCommand
         net start $databaseServiceName
 
         if($replicaSet) {
