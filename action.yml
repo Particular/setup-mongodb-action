@@ -38,10 +38,16 @@ runs:
         
         $version = [Version]::new("${{ inputs.mongodb-version }}")
         $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
-        
-        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y
 
+        echo "::group:: Installing MongoDB $version to $databaseBinDirectory"
+
+        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y --no-progress
+
+        echo "::endgroup::"
+
+        echo "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
+
         if($replicaSet) {
           & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
         }
@@ -50,6 +56,8 @@ runs:
         }
 
         net start $databaseServiceName
+
+        echo "::endgroup::"
 
         if($replicaSet) {
           & "$databaseBinDirectory\mongo.exe" --host "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
