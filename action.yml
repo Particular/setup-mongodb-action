@@ -12,9 +12,9 @@ inputs:
     default: ""
     
   mongodb-version:
-    description: "MongoDB version (default 5.0.11)"
+    description: "MongoDB version (default 5.0.20)"
     required: false
-    default: "5.0.11"  
+    default: "5.0.20"  
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
@@ -37,21 +37,40 @@ runs:
         mkdir $databaseLogsDirectory > $null
         
         $version = [Version]::new("${{ inputs.mongodb-version }}")
-        $databaseBinDirectory = "C:\'Program Files'\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
-        
-        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y
+        $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
 
-        $installServiceCommand = "$databaseBinDirectory\mongod --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName"
+        echo "::group:: Installing MongoDB $version to $databaseBinDirectory"
+
+        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y --no-progress
+
+        echo "::endgroup::"
+
+        echo "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
+
         if($replicaSet) {
-          $installServiceCommand = $installServiceCommand + ' --replSet $replicaSet'
+          echo "Starting MongoD with replica"
+          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
+        }
+        else {
+          echo "Starting MongoD without replica"
+          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
         }
 
-        Invoke-Expression $installServiceCommand
         net start $databaseServiceName
 
+        echo "::endgroup::"
+
+        echo "::endgroup::"
+
+        echo "::group::Installing MongoDB Shell"
+
+        choco install mongodb-shell
+
+        echo "::endgroup::"
+
         if($replicaSet) {
-          Invoke-Expression "$databaseBinDirectory\mongo ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval 'rs.initiate()'"
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
         }
 
     - name: Start MongoDB Server (Linux)
