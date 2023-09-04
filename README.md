@@ -8,8 +8,8 @@ See [action.yml](action.yml)
 
 ```yaml
 steps:
-  - name: Install SQL Server
-    uses: Particular/setup-mongodb-action@v1.0.0
+  - name: Install MongoDB
+    uses: Particular/setup-mongodb-action@v1.2.0
     with:
       connection-string-name: <my connection string name>
       mongodb-version: <mongodb version string>
