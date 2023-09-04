@@ -61,8 +61,16 @@ runs:
 
         echo "::endgroup::"
 
+        echo "::endgroup::"
+
+        echo "::group::Installing MongoDB Shell"
+
+        choco install mongodb-shell
+
+        echo "::endgroup::"
+
         if($replicaSet) {
-          & "$databaseBinDirectory\mongo.exe" --host ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval ""rs.initiate()""
+          & mongosh --host ""mongodb://127.0.0.1:${{ inputs.mongodb-port }}"" --eval ""rs.initiate()""
         }
 
     - name: Start MongoDB Server (Linux)
