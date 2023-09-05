@@ -65,7 +65,7 @@ runs:
 
         echo "::group::Installing MongoDB Shell"
 
-        choco install mongodb-shell
+        choco install mongodb-shell -y --no-progress
 
         echo "::endgroup::"
 
