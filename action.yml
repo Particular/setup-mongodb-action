@@ -41,7 +41,7 @@ runs:
 
         echo "::group:: Installing MongoDB $version to $databaseBinDirectory"
 
-        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y --force --no-progress
+        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y --no-progress
 
         echo "::endgroup::"
 
