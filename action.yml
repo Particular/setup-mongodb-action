@@ -12,9 +12,9 @@ inputs:
     default: ""
     
   mongodb-version:
-    description: "MongoDB version (default 5.0.20)"
+    description: "MongoDB version (default 7.0.1)"
     required: false
-    default: "5.0.21"  
+    default: "7.0.1"  
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
