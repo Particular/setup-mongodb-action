@@ -12,9 +12,9 @@ inputs:
     default: ""
     
   mongodb-version:
-    description: "MongoDB version (default 7.2.2)"
+    description: "MongoDB version (default 7.0.6)"
     required: false
-    default: "7.2.2"  
+    default: "7.0.6"  
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
@@ -30,7 +30,7 @@ runs:
       run: |
         $databaseServiceName = "MongoDB$(Get-Random)"
         $tempPath = [System.IO.Path]::GetTempPath()
-        $databaseRootDirectory Join-Path $tempPath $databaseServiceName
+        $databaseRootDirectory = Join-Path $tempPath $databaseServiceName
         $databaseDataDirectory = Join-Path $databaseRootDirectory "data"
         $databaseLogsDirectory = Join-Path $databaseRootDirectory "logs"
         mkdir $databaseRootDirectory > $null
