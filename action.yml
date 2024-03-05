@@ -77,11 +77,22 @@ runs:
 
     - name: Start MongoDB Server (Linux)
       if: runner.os == 'Linux'
-      uses: supercharge/mongodb-github-action@v1.10.0
-      with:
-        mongodb-replica-set: ${{ inputs.mongodb-replica-set }}
-        mongodb-port: ${{ inputs.mongodb-port }}
-        mongodb-version: ${{ inputs.mongodb-version }}
+      shell: pwsh
+      run: |
+        $databaseServiceName = "MongoDB$(Get-Random)"
+        echo "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
+        $replicaSet = "${{ inputs.mongodb-replica-set }}"
+
+        if($replicaSet) {
+          echo "Starting MongoD with replica"
+          docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --replSet $replicaSet --port ${{ inputs.mongodb-port }}
+          mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+        }
+        else {
+          echo "Starting MongoD without replica"
+          docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --port ${{ inputs.mongodb-port }}
+        }
+        
     - name: Setup Connection string
       shell: pwsh
       run: |
