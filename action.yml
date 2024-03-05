@@ -21,6 +21,21 @@ inputs:
     required: false
     default: 27017
 
+  mongodb-db:
+    description: 'MongoDB db to create (default: none)'
+    required: false
+    default: ''
+
+  mongodb-username:
+    description: 'MongoDB root username (default: none)'
+    required: false
+    default: ''
+
+  mongodb-password:
+    description: 'MongoDB root password (default: none)'
+    required: false
+    default: ''
+
 runs:
   using: "composite"
   steps:
@@ -28,52 +43,8 @@ runs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        $databaseServiceName = "MongoDB$(Get-Random)"
-        $tempPath = [System.IO.Path]::GetTempPath()
-        $databaseRootDirectory = Join-Path $tempPath $databaseServiceName
-        $databaseDataDirectory = Join-Path $databaseRootDirectory "data"
-        $databaseLogsDirectory = Join-Path $databaseRootDirectory "logs"
-        $databaseLogFile = Join-Path $databaseLogsDirectory "logs.txt"
-        mkdir $databaseRootDirectory > $null
-        mkdir $databaseDataDirectory > $null
-        mkdir $databaseLogsDirectory > $null
-        
-        $version = [Version]::new("${{ inputs.mongodb-version }}")
-        $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
 
-        echo "::group:: Installing MongoDB $version to $databaseBinDirectory"
-
-        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y --no-progress
-
-        echo "::endgroup::"
-
-        echo "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
-        $replicaSet = "${{ inputs.mongodb-replica-set }}"
-
-        if($replicaSet) {
-          echo "Starting MongoD with replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
-        }
-        else {
-          echo "Starting MongoD without replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
-        }
-
-        net start $databaseServiceName
-
-        echo "::endgroup::"
-
-        echo "::endgroup::"
-
-        echo "::group::Installing MongoDB Shell"
-
-        choco install mongodb-shell -y --no-progress
-
-        echo "::endgroup::"
-
-        if($replicaSet) {
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
-        }
+        docker run --name mongodb --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} -e MONGO_INITDB_DATABASE=${{ inputs.mongodb-db }} -e MONGO_INITDB_ROOT_USERNAME=${{ inputs.mongodb-username }} -e MONGO_INITDB_ROOT_PASSWORD=${{ inputs.mongodb-password }} --detach mongo:${{ inputs.mongodb-version }} --port ${{ inputs.mongodb-port }}
 
     - name: Start MongoDB Server (Linux)
       if: runner.os == 'Linux'
