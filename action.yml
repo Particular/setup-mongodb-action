@@ -12,9 +12,9 @@ inputs:
     default: ""
     
   mongodb-version:
-    description: "MongoDB version (default 7.0.1)"
+    description: "MongoDB version (default 7.0.6)"
     required: false
-    default: "7.0.1"  
+    default: "7.0.6"  
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
@@ -29,9 +29,11 @@ runs:
       shell: pwsh
       run: |
         $databaseServiceName = "MongoDB$(Get-Random)"
-        $databaseRootDirectory = "D:\temp\$databaseServiceName"
-        $databaseDataDirectory = "$databaseRootDirectory\data"
-        $databaseLogsDirectory = "$databaseRootDirectory\logs"
+        $tempPath = [System.IO.Path]::GetTempPath()
+        $databaseRootDirectory = Join-Path $tempPath $databaseServiceName
+        $databaseDataDirectory = Join-Path $databaseRootDirectory "data"
+        $databaseLogsDirectory = Join-Path $databaseRootDirectory "logs"
+        $databaseLogFile = Join-Path $databaseLogsDirectory "logs.txt"
         mkdir $databaseRootDirectory > $null
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
@@ -50,11 +52,11 @@ runs:
 
         if($replicaSet) {
           echo "Starting MongoD with replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
+          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
         }
         else {
           echo "Starting MongoD without replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
+          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
         }
 
         net start $databaseServiceName
