@@ -29,50 +29,17 @@ runs:
       shell: pwsh
       run: |
         $databaseServiceName = "MongoDB$(Get-Random)"
-        $tempPath = [System.IO.Path]::GetTempPath()
-        $databaseRootDirectory = Join-Path $tempPath $databaseServiceName
-        $databaseDataDirectory = Join-Path $databaseRootDirectory "data"
-        $databaseLogsDirectory = Join-Path $databaseRootDirectory "logs"
-        $databaseLogFile = Join-Path $databaseLogsDirectory "logs.txt"
-        mkdir $databaseRootDirectory > $null
-        mkdir $databaseDataDirectory > $null
-        mkdir $databaseLogsDirectory > $null
-        
-        $version = [Version]::new("${{ inputs.mongodb-version }}")
-        $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
-
-        echo "::group:: Installing MongoDB $version to $databaseBinDirectory"
-
-        choco install mongodb --version=""${{ inputs.mongodb-version }}"" -y --no-progress
-
-        echo "::endgroup::"
-
         echo "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
 
         if($replicaSet) {
           echo "Starting MongoD with replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
+          docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --replSet $replicaSet --port ${{ inputs.mongodb-port }}
+          docker exec --tty $databaseServiceName mongosh --port ${{ inputs.mongodb-port }} --eval "rs.initiate()"
         }
         else {
           echo "Starting MongoD without replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
-        }
-
-        net start $databaseServiceName
-
-        echo "::endgroup::"
-
-        echo "::endgroup::"
-
-        echo "::group::Installing MongoDB Shell"
-
-        choco install mongodb-shell -y --no-progress
-
-        echo "::endgroup::"
-
-        if($replicaSet) {
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+          docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --port ${{ inputs.mongodb-port }}
         }
 
     - name: Start MongoDB Server (Linux)
