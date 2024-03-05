@@ -29,9 +29,10 @@ runs:
       shell: pwsh
       run: |
         $databaseServiceName = "MongoDB$(Get-Random)"
-        $databaseRootDirectory = "D:\temp\$databaseServiceName"
-        $databaseDataDirectory = "$databaseRootDirectory\data"
-        $databaseLogsDirectory = "$databaseRootDirectory\logs"
+        $tempPath = [System.IO.Path]::GetTempPath()
+        $databaseRootDirectory Join-Path $tempPath $databaseServiceName
+        $databaseDataDirectory = Join-Path $databaseRootDirectory "data"
+        $databaseLogsDirectory = Join-Path $databaseRootDirectory "logs"
         mkdir $databaseRootDirectory > $null
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
