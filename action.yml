@@ -86,12 +86,35 @@ runs:
         if($replicaSet) {
           echo "Starting MongoD with replica"
           docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --replSet $replicaSet --port ${{ inputs.mongodb-port }}
-          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
-          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
         }
         else {
           echo "Starting MongoD without replica"
           docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --port ${{ inputs.mongodb-port }}
+        }
+
+        Write-Output "::group::Testing connection"
+        $startDate = Get-Date
+        $connected = "False"
+        do {
+            try {
+                docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()"
+                Write-Output "Connection to MongoDB successful"
+                $connected = "True"
+            }
+            catch {
+                if ($startDate.AddSeconds(20) -lt (Get-Date)) {
+                    throw "MongoDB did not initialize within 20 seconds. Exiting."
+                }
+                Start-Sleep -Seconds 1
+            }
+        } While ($connected -ne "True")
+
+        Write-Output "::endgroup::"
+
+        
+        if($replicaSet) {
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
         }
         
     - name: Setup Connection string
