@@ -73,6 +73,10 @@ runs:
 
         if($replicaSet) {
           & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
+        }
+        else {
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
         }
 
     - name: Start MongoDB Server (Linux)
@@ -97,7 +101,7 @@ runs:
         $connected = "False"
         do {
             try {
-                docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()"
+                docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
                 Write-Output "Connection to MongoDB successful"
                 $connected = "True"
             }
