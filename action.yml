@@ -33,6 +33,7 @@ runs:
         $databaseRootDirectory = Join-Path $tempPath $databaseServiceName
         $databaseDataDirectory = Join-Path $databaseRootDirectory "data"
         $databaseLogsDirectory = Join-Path $databaseRootDirectory "logs"
+        $databaseLogFile = Join-Path $databaseLogsDirectory "logs.txt"
         mkdir $databaseRootDirectory > $null
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
@@ -51,11 +52,11 @@ runs:
 
         if($replicaSet) {
           echo "Starting MongoD with replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
+          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName --replSet $replicaSet
         }
         else {
           echo "Starting MongoD without replica"
-          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath ""$databaseLogsDirectory\logs.txt"" --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
+          & "$databaseBinDirectory\mongod.exe" --dbpath $databaseDataDirectory --logpath $databaseLogFile --port ${{ inputs.mongodb-port }} --bind_ip 127.0.0.1 --install --serviceName $databaseServiceName --serviceDisplayName $databaseServiceName
         }
 
         net start $databaseServiceName
@@ -66,7 +67,7 @@ runs:
 
         echo "::group::Installing MongoDB Shell"
 
-        choco install mongodb-shell -y --no-progress --version="2.1.5"
+        choco install mongodb-shell -y --no-progress
 
         echo "::endgroup::"
 
