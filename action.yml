@@ -86,8 +86,8 @@ runs:
         if($replicaSet) {
           echo "Starting MongoD with replica"
           docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --replSet $replicaSet --port ${{ inputs.mongodb-port }}
-          docker exec --tty $databaseServiceName mongosh --quiet --port ${{ inputs.mongodb-port }} --eval "rs.initiate()"
-          docker exec --tty $databaseServiceName mongosh --quiet --port $MONGODB_PORT --eval "rs.status()"
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
         }
         else {
           echo "Starting MongoD without replica"
