@@ -29,6 +29,7 @@ jobs:
           mongodb-port: 27018
           mongodb-replica-set: "tr0"
       - name: Check result
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $connstr = $Env:MongoDBConnectionString
