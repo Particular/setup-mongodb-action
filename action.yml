@@ -100,7 +100,7 @@ runs:
         $startDate = Get-Date
         do {
             try {
-                $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:1234" --eval "db.serverStatus()" --quiet
+                $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
                 if(!$output.Contains('ECONNREFUSED')) {
                     Write-Output "Connection to MongoDB successful"
                     break
@@ -119,8 +119,8 @@ runs:
 
         
         if($replicaSet) {
-          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
-          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()" --quiet
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
         }
         
     - name: Setup Connection string
