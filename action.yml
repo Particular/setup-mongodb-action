@@ -112,6 +112,7 @@ runs:
                     throw "MongoDB did not initialize within 20 seconds. Exiting."
                 }
                 Start-Sleep -Seconds 1
+                Write-Output "Connection to MongoDB unsuccessful. Trying again"
             }
         } While ($True)
 
