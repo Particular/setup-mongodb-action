@@ -98,12 +98,14 @@ runs:
 
         Write-Output "::group::Testing connection"
         $startDate = Get-Date
-        $connected = "False"
         do {
             try {
-                docker exec -it $databaseServiceName bash -ic "mongosh 'mongodb://127.0.0.1:${{ inputs.mongodb-port }}' --eval 'db.serverStatus()'  --quiet; (exit \$?)"
-                $connected = "True"
-                Write-Output "Connection to MongoDB successful"
+                $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
+                Write-Output $output
+                if(!$output.Contains('ECONNREFUSED')) {
+                    Write-Output "Connection to MongoDB successful"
+                    break
+                }
             }
             catch {
                 if ($startDate.AddSeconds(20) -lt (Get-Date)) {
@@ -111,7 +113,7 @@ runs:
                 }
                 Start-Sleep -Seconds 1
             }
-        } While ($connected -ne "True")
+        } While ($True)
 
         Write-Output "::endgroup::"
 
