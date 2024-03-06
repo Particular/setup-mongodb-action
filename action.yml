@@ -101,8 +101,9 @@ runs:
         $connected = "False"
         do {
             try {
-                docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()"                Write-Output "Connection to MongoDB successful"
+                docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()"
                 $connected = "True"
+                Write-Output "Connection to MongoDB successful"
             }
             catch {
                 if ($startDate.AddSeconds(20) -lt (Get-Date)) {
