@@ -84,15 +84,15 @@ runs:
       shell: pwsh
       run: |
         $databaseServiceName = "MongoDB$(Get-Random)"
-        echo "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
+        Write-Output "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
 
         if($replicaSet) {
-          echo "Starting MongoD with replica"
+          Write-Output "Starting MongoD with replica"
           docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --replSet $replicaSet --port ${{ inputs.mongodb-port }}
         }
         else {
-          echo "Starting MongoD without replica"
+          Write-Output "Starting MongoD without replica"
           docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --port ${{ inputs.mongodb-port }}
         }
 
@@ -119,8 +119,12 @@ runs:
 
         
         if($replicaSet) {
+          Write-Output "::group::Setting up the replica set"
+          
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()" --quiet
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
+
+          Write-Output "::endgroup::"
         }
         
     - name: Setup Connection string
