@@ -8,7 +8,7 @@ using NUnit.Framework;
 class DriverCompatibilityTests
 {
     [Test]
-    public async Task Should_not_have_duplicate_subscriptions()
+    public async Task Should_report_correct_cluster_type()
     {
         var containerConnectionString = Environment.GetEnvironmentVariable("MongoDBConnectionString");
 
