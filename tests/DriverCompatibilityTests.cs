@@ -14,7 +14,7 @@ class DriverCompatibilityTests
 
         var client = new MongoClient(containerConnectionString);
 
-        using (var session = client.StartSession())
+        using (var session = await client.StartSessionAsync())
         {
             Assert.AreEqual(client.Cluster.Description.Type, ClusterType.ReplicaSet);
         }
