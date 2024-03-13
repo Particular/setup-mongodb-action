@@ -10,11 +10,11 @@ inputs:
     description: "MongoDB replica set name (no replica set by default)"
     required: false
     default: ""
-    
+
   mongodb-version:
     description: "MongoDB version (default 7.0.6)"
     required: false
-    default: "7.0.6"  
+    default: "7.0.6"
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
@@ -37,7 +37,7 @@ runs:
         mkdir $databaseRootDirectory > $null
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
-        
+
         $version = [Version]::new("${{ inputs.mongodb-version }}")
         $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
 
@@ -117,16 +117,14 @@ runs:
 
         Write-Output "::endgroup::"
 
-        
         if($replicaSet) {
           Write-Output "::group::Setting up the replica set"
-          
+
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()" --quiet
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
 
           Write-Output "::endgroup::"
         }
-        
     - name: Setup Connection string
       shell: pwsh
       run: |
