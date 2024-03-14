@@ -100,9 +100,9 @@ runs:
         $startDate = Get-Date
         do {
             try {
-                $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}/?replicaSet=$replicaSet" --eval "db.serverStatus()" --quiet
+                $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
                 Write-Output $output
-                if(!$output.Contains('ECONNREFUSED') -Or !$output.Contains('Server selection timed out')) {
+                if(!$output.Contains('ECONNREFUSED')) {
                     Write-Output "Connection to MongoDB successful"
                     break
                 }
@@ -125,6 +125,29 @@ runs:
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
 
           Write-Output "::endgroup::"
+
+          Write-Output "::group::Testing connection to replica set"
+          $startDate = Get-Date
+          do {
+              try {
+                  $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}/?replicaSet=$replicaSet" --eval "db.serverStatus()" --quiet
+                  Write-Output $output
+                  if(!$output.Contains('ECONNREFUSED') -Or !$output.Contains('Server selection timed out')) {
+                      Write-Output "Connection to MongoDB successful"
+                      break
+                  }
+              }
+              catch {
+                  if ($startDate.AddSeconds(20) -lt (Get-Date)) {
+                      throw "MongoDB did not initialize within 20 seconds. Exiting."
+                  }
+                  Start-Sleep -Seconds 1
+                  Write-Output "Connection to MongoDB unsuccessful. Trying again"
+              }
+          } While ($True)
+
+          Write-Output "::endgroup::"
+           
         }
     - name: Setup Connection string
       shell: pwsh
