@@ -9,10 +9,10 @@ class DriverCompatibilityTests
     [Test]
     public void Should_report_correct_cluster_type()
     {
-        var containerConnectionString = Environment.GetEnvironmentVariable("MongoDBConnectionString");
-        TestContext.WriteLine("ConnectionString: " + containerConnectionString);
+        var connectionString = Environment.GetEnvironmentVariable("MongoDBConnectionString");
+        TestContext.WriteLine("ConnectionString: " + connectionString);
 
-        var client = new MongoClient(containerConnectionString);
+        var client = new MongoClient(connectionString);
 
         //do a fake call to make sure that cluster details is fetched
         client.ListDatabases();
