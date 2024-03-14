@@ -10,11 +10,11 @@ inputs:
     description: "MongoDB replica set name (no replica set by default)"
     required: false
     default: ""
-    
+
   mongodb-version:
     description: "MongoDB version (default 7.0.6)"
     required: false
-    default: "7.0.6"  
+    default: "7.0.6"
 
   mongodb-port:
     description: "MongoDB port to use (default 27017)"
@@ -37,7 +37,7 @@ runs:
         mkdir $databaseRootDirectory > $null
         mkdir $databaseDataDirectory > $null
         mkdir $databaseLogsDirectory > $null
-        
+
         $version = [Version]::new("${{ inputs.mongodb-version }}")
         $databaseBinDirectory = "C:\Program Files\MongoDB\Server\$($version.Major).$($version.Minor)\bin"
 
@@ -71,19 +71,108 @@ runs:
 
         echo "::endgroup::"
 
+        Write-Output "::group::Testing connection"
+        $startDate = Get-Date
+        do {
+            try {
+                $output = & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
+                if(!$output.Contains('ECONNREFUSED')) {
+                    Write-Output "Connection to MongoDB successful"
+                    break
+                }
+            }
+            catch {
+                if ($startDate.AddSeconds(20) -lt (Get-Date)) {
+                    throw "MongoDB did not initialize within 20 seconds. Exiting."
+                }
+                Start-Sleep -Seconds 1
+                Write-Output "Connection to MongoDB unsuccessful. Trying again"
+            }
+        } While ($True)
+
+        Write-Output "::endgroup::"
+
         if($replicaSet) {
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+          Write-Output "::group::Setting up the replica set"
+
+          $rsInitialize = 
+            "rs.initiate( 
+                { 
+                    _id: '${{ inputs.mongodb-replica-set }}', 
+                    members: [ { _id: 0, host: '127.0.0.1:${{ inputs.mongodb-port }}' } ] 
+                } 
+            );"
+
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "$rsInitialize" --quiet
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()" --quiet
+
+          echo "::endgroup::"
         }
 
     - name: Start MongoDB Server (Linux)
       if: runner.os == 'Linux'
-      uses: supercharge/mongodb-github-action@v1.10.0
-      with:
-        mongodb-replica-set: ${{ inputs.mongodb-replica-set }}
-        mongodb-port: ${{ inputs.mongodb-port }}
-        mongodb-version: ${{ inputs.mongodb-version }}
+      shell: pwsh
+      run: |
+        $databaseServiceName = "MongoDB$(Get-Random)"
+        Write-Output "::group:: Starting MongoDB $databaseServiceName on port ${{ inputs.mongodb-port }}"
+        $replicaSet = "${{ inputs.mongodb-replica-set }}"
+
+        if($replicaSet) {
+          Write-Output "Starting MongoD with replica"
+          docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --replSet $replicaSet --port ${{ inputs.mongodb-port }}
+        }
+        else {
+          Write-Output "Starting MongoD without replica"
+          docker run --name $databaseServiceName --publish ${{ inputs.mongodb-port }}:${{ inputs.mongodb-port }} --detach mongo:${{ inputs.mongodb-version }} --port ${{ inputs.mongodb-port }}
+        }
+
+        Write-Output "::group::Testing connection"
+        $startDate = Get-Date
+        do {
+            try {
+                $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
+                if(!$output.Contains('ECONNREFUSED')) {
+                    Write-Output "Connection to MongoDB successful"
+                    break
+                }
+            }
+            catch {
+                if ($startDate.AddSeconds(20) -lt (Get-Date)) {
+                    throw "MongoDB did not initialize within 20 seconds. Exiting."
+                }
+                Start-Sleep -Seconds 1
+                Write-Output "Connection to MongoDB unsuccessful. Trying again"
+            }
+        } While ($True)
+
+        Write-Output "::endgroup::"
+
+        if($replicaSet) {
+          Write-Output "::group::Setting up the replica set"
+
+          $rsInitialize = 
+            "rs.initiate( 
+                { 
+                    _id: '${{ inputs.mongodb-replica-set }}', 
+                    members: [ { _id: 0, host: '127.0.0.1:${{ inputs.mongodb-port }}' } ] 
+                } 
+            );"
+
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "$rsInitialize" --quiet
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
+
+          Write-Output "::endgroup::"
+        }
     - name: Setup Connection string
       shell: pwsh
       run: |
         echo "Setting environment variable ${{ inputs.connection-string-name }} to MongoDB connection string..."
-        echo "${{ inputs.connection-string-name }}=mongodb://127.0.0.1:${{ inputs.mongodb-port }}" >> $Env:GITHUB_ENV
+
+        $connectionString = "${{ inputs.connection-string-name }}=mongodb://127.0.0.1:${{ inputs.mongodb-port }}"
+        $replicaSet = "${{ inputs.mongodb-replica-set }}"
+
+        if($replicaSet) {
+          $connectionString = $connectionString + "/?replicaSet=" + $replicaSet
+        }
+
+        echo $connectionString >> $Env:GITHUB_ENV
