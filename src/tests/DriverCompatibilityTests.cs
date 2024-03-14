@@ -12,6 +12,9 @@ class DriverCompatibilityTests
         var containerConnectionString = Environment.GetEnvironmentVariable("MongoDBConnectionString");
         var client = new MongoClient(containerConnectionString);
 
+        //do a fake call
+        client.ListDatabases();
+
         TestContext.WriteLine("ClusterId: " + client.Cluster.Description.ClusterId);
         TestContext.WriteLine("State: " + client.Cluster.Description.State);
         TestContext.WriteLine("Type: " + client.Cluster.Description.Type);
