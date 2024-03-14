@@ -102,7 +102,7 @@ runs:
             try {
                 $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}/?replicaSet=$replicaSet" --eval "db.serverStatus()" --quiet
                 Write-Output $output
-                if(!$output.Contains('ECONNREFUSED')) {
+                if(!$output.Contains('ECONNREFUSED') -Or !$output.Contains('Server selection timed out')) {
                     Write-Output "Connection to MongoDB successful"
                     break
                 }
