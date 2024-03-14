@@ -72,8 +72,20 @@ runs:
         echo "::endgroup::"
 
         if($replicaSet) {
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.initiate()"
+          Write-Output "::group::Setting up the replica set"
+
+          $rsInitialize = 
+            "rs.initiate( 
+                { 
+                    _id: '${{ inputs.mongodb-replica-set }}', 
+                    members: [ { _id: 0, host: '127.0.0.1:${{ inputs.mongodb-port }}' } ] 
+                } 
+            );"
+
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "$rsInitialize"
           & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
+
+          echo "::endgroup::"
         }
         else {
           & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()"
@@ -101,7 +113,6 @@ runs:
         do {
             try {
                 $output = & docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
-                Write-Output $output
                 if(!$output.Contains('ECONNREFUSED')) {
                     Write-Output "Connection to MongoDB successful"
                     break
@@ -145,7 +156,5 @@ runs:
         if($replicaSet) {
           $connectionString = $connectionString + "/?replicaSet=" + $replicaSet
         }
-
-        echo $connectionString
 
         echo $connectionString >> $Env:GITHUB_ENV
