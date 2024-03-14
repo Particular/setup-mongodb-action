@@ -137,4 +137,6 @@ runs:
           $connectionString = $connectionString + "/?replicaSet=" + $replicaSet
         }
 
+        echo $connectionString
+
         echo $connectionString >> $Env:GITHUB_ENV
