@@ -71,6 +71,27 @@ runs:
 
         echo "::endgroup::"
 
+        Write-Output "::group::Testing connection"
+        $startDate = Get-Date
+        do {
+            try {
+                $output = & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()" --quiet
+                if(!$output.Contains('ECONNREFUSED')) {
+                    Write-Output "Connection to MongoDB successful"
+                    break
+                }
+            }
+            catch {
+                if ($startDate.AddSeconds(20) -lt (Get-Date)) {
+                    throw "MongoDB did not initialize within 20 seconds. Exiting."
+                }
+                Start-Sleep -Seconds 1
+                Write-Output "Connection to MongoDB unsuccessful. Trying again"
+            }
+        } While ($True)
+
+        Write-Output "::endgroup::"
+
         if($replicaSet) {
           Write-Output "::group::Setting up the replica set"
 
@@ -82,13 +103,10 @@ runs:
                 } 
             );"
 
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "$rsInitialize"
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "$rsInitialize" --quiet
+          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()" --quiet
 
           echo "::endgroup::"
-        }
-        else {
-          & mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "db.serverStatus()"
         }
 
     - name: Start MongoDB Server (Linux)
