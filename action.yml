@@ -121,7 +121,7 @@ runs:
         if($replicaSet) {
           Write-Output "::group::Setting up the replica set"
 
-          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "
+docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "
   rs.initiate({
     \"_id\": \"tr0\",
     \"members\": [ {
