@@ -121,15 +121,15 @@ runs:
         if($replicaSet) {
           Write-Output "::group::Setting up the replica set"
 
-docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "
-  rs.initiate({
-    \"_id\": \"tr0\",
-    \"members\": [ {
-       \"_id\": 0,
-      \"host\": \"localhost:27018\"
-    } ]
-  })
-"
+          $rsInitialize = 
+            "rs.initiate( 
+                { 
+                    _id: '" + $replicaSet + "', 
+                    members: [ { _id: 0, host: 'localhost:27018' } ] 
+                } 
+            );"
+
+          docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "$rsInitialize"
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
 
           Write-Output "::endgroup::"
