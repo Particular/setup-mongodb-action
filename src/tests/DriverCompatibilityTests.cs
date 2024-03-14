@@ -12,16 +12,14 @@ class DriverCompatibilityTests
         var containerConnectionString = Environment.GetEnvironmentVariable("MongoDBConnectionString");
         var client = new MongoClient(containerConnectionString);
 
-        //do a fake call
+        //do a fake call to make sure that cluster details is fetched
         client.ListDatabases();
 
-        TestContext.WriteLine("ClusterId: " + client.Cluster.Description.ClusterId);
         TestContext.WriteLine("State: " + client.Cluster.Description.State);
         TestContext.WriteLine("Type: " + client.Cluster.Description.Type);
-        TestContext.WriteLine("IsCompatibleWithDriver: " + client.Cluster.Description.IsCompatibleWithDriver);
-        TestContext.WriteLine("ServerCount: " + client.Cluster.Description.Servers.Count);
         TestContext.WriteLine("ReplicaSetName: " + client.Cluster.Settings.ReplicaSetName);
 
         Assert.AreEqual(ClusterType.ReplicaSet, client.Cluster.Description.Type);
+        Assert.AreEqual("tr0", client.Cluster.Settings.ReplicaSetName);
     }
 }
