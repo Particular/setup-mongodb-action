@@ -130,7 +130,7 @@ runs:
       run: |
         echo "Setting environment variable ${{ inputs.connection-string-name }} to MongoDB connection string..."
 
-        $connectionString = ${{ inputs.connection-string-name }}=mongodb://127.0.0.1:${{ inputs.mongodb-port }}"
+        $connectionString = "${{ inputs.connection-string-name }}=mongodb://127.0.0.1:${{ inputs.mongodb-port }}"
         $replicaSet = "${{ inputs.mongodb-replica-set }}"
 
         if($replicaSet) {
