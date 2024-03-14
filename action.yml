@@ -126,10 +126,10 @@ runs:
     \"_id\": \"${{ inputs.mongodb-replica-set }}\",
     \"members\": [ {
        \"_id\": 0,
-      \"host\": \"127.0.0.1:${{ inputs.mongodb-port }}\"
+      \"host\": \"localhost:${{ inputs.mongodb-port }}\"
     } ]
   })
-" --quiet
+"
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "rs.status()"  --quiet
 
           Write-Output "::endgroup::"
