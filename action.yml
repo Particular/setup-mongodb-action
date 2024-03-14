@@ -123,10 +123,10 @@ runs:
 
           docker exec --tty $databaseServiceName mongosh "mongodb://127.0.0.1:${{ inputs.mongodb-port }}" --eval "
   rs.initiate({
-    \"_id\": \"${{ inputs.mongodb-replica-set }}\",
+    \"_id\": \"tr0\",
     \"members\": [ {
        \"_id\": 0,
-      \"host\": \"localhost:${{ inputs.mongodb-port }}\"
+      \"host\": \"localhost:27018\"
     } ]
   })
 "
