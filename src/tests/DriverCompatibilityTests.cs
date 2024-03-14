@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
-using MongoDB.Bson;
+using System.Text.Json;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
 using NUnit.Framework;
@@ -14,7 +13,7 @@ class DriverCompatibilityTests
         var containerConnectionString = Environment.GetEnvironmentVariable("MongoDBConnectionString");
         var client = new MongoClient(containerConnectionString);
 
-        TestContext.WriteLine(client.Cluster.Description.ToJson());
+        TestContext.WriteLine(JsonSerializer.Serialize(client.Cluster.Description));
         Assert.AreEqual(client.Cluster.Description.Type, ClusterType.ReplicaSet);
     }
 }
