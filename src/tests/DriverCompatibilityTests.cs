@@ -21,7 +21,7 @@ class DriverCompatibilityTests
         TestContext.WriteLine("Type: " + client.Cluster.Description.Type);
         TestContext.WriteLine("ReplicaSetName: " + client.Cluster.Settings.ReplicaSetName);
 
-        Assert.AreEqual(ClusterType.ReplicaSet, client.Cluster.Description.Type);
-        Assert.AreEqual("tr0", client.Cluster.Settings.ReplicaSetName);
+        Assert.That(client.Cluster.Description.Type, Is.EqualTo(ClusterType.ReplicaSet));
+        Assert.That(client.Cluster.Settings.ReplicaSetName, Is.EqualTo("tr0"));
     }
 }
