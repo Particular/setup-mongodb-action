@@ -14,7 +14,7 @@ const isPost = core.getState('IsPost');
 core.saveState('IsPost', true);
 
 const connectionStringName = core.getInput('connection-string-name') || 'MongoDBConnectionString';
-const mongoDbVersion = core.getInput('mongodb-version') || '7.0.6';
+const mongoDbVersion = core.getInput('mongodb-version') || '7.0.39';
 const mongoDbPort = core.getInput('mongodb-port') || '27017';
 const replicaSet = core.getInput('mongodb-replica-set');
 

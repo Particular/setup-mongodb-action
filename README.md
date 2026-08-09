@@ -25,7 +25,7 @@ steps:
     mongodb-port: <port number>
 ```
 
-`connection-string-name` defaults to `MongoDBConnectionString`. `mongodb-version` defaults to `7.0.6`, `mongodb-port` to `27017`, and `mongodb-replica-set` is empty when omitted.
+`connection-string-name` defaults to `MongoDBConnectionString`. `mongodb-version` defaults to `7.0.39`, `mongodb-port` to `27017`, and `mongodb-replica-set` is empty when omitted.
 
 The action writes the connection string to the environment variable named by `connection-string-name`. When a replica set is configured, it appends `?replicaSet=<name>` so drivers pick up the topology from the connection string alone.
 
@@ -58,7 +58,7 @@ To test the setup action, create an `.env.setup` file in the root directory with
 ```ini
 # Input overrides
 INPUT_CONNECTION-STRING-NAME=MongoDBConnectionString
-INPUT_MONGODB-VERSION=7.0.6
+INPUT_MONGODB-VERSION=7.0.39
 INPUT_MONGODB-PORT=27018
 INPUT_MONGODB-REPLICA-SET=tr0
 

@@ -11,7 +11,7 @@ inputs:
   mongodb-version:
     description: The tag of the MongoDB container image to use.
     required: false
-    default: "7.0.6"
+    default: "7.0.39"
   mongodb-port:
     description: The port MongoDB listens on.
     required: false

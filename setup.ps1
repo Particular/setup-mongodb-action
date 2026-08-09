@@ -1,7 +1,7 @@
 param (
     [string]$ContainerName,
     [string]$ConnectionStringName,
-    [string]$MongoDbVersion = "7.0.6",
+    [string]$MongoDbVersion = "7.0.39",
     [string]$MongoDbPort = "27017",
     [string]$ReplicaSet = ""
 )

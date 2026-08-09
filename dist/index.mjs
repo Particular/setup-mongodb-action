@@ -31202,7 +31202,7 @@ const isPost = getState('IsPost');
 saveState('IsPost', true);
 
 const connectionStringName = getInput('connection-string-name') || 'MongoDBConnectionString';
-const mongoDbVersion = getInput('mongodb-version') || '7.0.6';
+const mongoDbVersion = getInput('mongodb-version') || '7.0.39';
 const mongoDbPort = getInput('mongodb-port') || '27017';
 const replicaSet = getInput('mongodb-replica-set');
 
