@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 jobs:
   ci:
-    runs-on: ${{ matrix. os }}
+    runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     strategy:
       fail-fast: false
@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Setup WSL
+        uses: Particular/setup-wsl-action@fix/docker-subnet-collision
       - name: Run
         uses: ./
         with:
@@ -29,18 +31,30 @@ jobs:
           mongodb-port: 27018
           mongodb-replica-set: "tr0"
       - name: Check result
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $connstr = $Env:MongoDBConnectionString
           Write-Host "Connection String: $connstr"
 
-          $result = mongosh "$connstr"
-          echo $result
+          if (-not $connstr) {
+            throw "Environment variable 'MongoDBConnectionString' not set."
+          }
+
+          if ($connstr -notmatch '^mongodb://\S+:\d+/\?replicaSet=tr0$') {
+            throw "Connection string does not match expected format."
+          }
+
+          # The mongosh shim forwards to the container on both platforms.
+          $serverStatus = (mongosh "$connstr" --eval "db.serverStatus().ok" --quiet) -join "`n"
+          Write-Host "serverStatus ok: $serverStatus"
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "mongosh failed with exit code $LASTEXITCODE — MongoDB is not responding."
+          }
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6.0.0
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Build
         run: dotnet build src --configuration Release
       - name: Run tests
