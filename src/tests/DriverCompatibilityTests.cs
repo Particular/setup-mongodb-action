@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
 using NUnit.Framework;
@@ -15,7 +16,7 @@ class DriverCompatibilityTests
         var client = new MongoClient(connectionString);
 
         //do a fake call to make sure that cluster details is fetched
-        client.ListDatabases();
+        client.ListDatabases(CancellationToken.None);
 
         TestContext.Out.WriteLine("State: " + client.Cluster.Description.State);
         TestContext.Out.WriteLine("Type: " + client.Cluster.Description.Type);
