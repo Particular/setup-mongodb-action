@@ -33,6 +33,15 @@ On Linux runners the MongoDB container runs directly through Docker. On Windows 
 
 The action also adds `mongosh` to the PATH of subsequent steps on both platforms. It forwards into the container, so scripts that call `mongosh` keep working unchanged on Windows and Linux.
 
+## Resource limits
+
+MongoDB runs in a container with a **1 GB WiredTiger cache** and a raised file-descriptor limit (`nofile=1048576`) on both platforms.
+
+- The cache is capped because mongod's default (50% of RAM) plus connection churn OOM-kills it inside the 4 GB WSL2 VM that setup-wsl-action provisions by default on Windows runners. 1 GB is plenty for test-sized datasets.
+- The fd limit is raised because dockerd inside WSL inherits Ubuntu's default `ulimit -n` of 1024, and acceptance suites (hundreds of pooled connections plus one WiredTiger data/index file per collection) exhaust that — mongod fails with `24: Too many open files` and dies, which surfaces in MongoDB drivers as `EndOfStreamException` while receiving a message.
+
+If a workflow runs an unusually heavy suite on Windows, the WSL2 VM's 4 GB default can still be tight. Give it more memory via setup-wsl-action's `memory` input, e.g. `Particular/setup-wsl-action` with `memory: 8GB`.
+
 ## License
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE.md).

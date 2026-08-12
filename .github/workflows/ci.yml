@@ -51,6 +51,18 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "mongosh failed with exit code $LASTEXITCODE — MongoDB is not responding."
           }
+
+          # Regression guard: mongod must run with a capped WiredTiger cache (1GB) and a
+          # raised fd limit. Without the cap the default cache (50% of RAM) plus connection
+          # churn OOM-kills mongod inside the 4GB WSL2 VM on Windows runners, and without
+          # the raised fd limit mongod dies with "Too many open files" under the load of a
+          # real acceptance suite — both surface as EndOfStreamException in clients.
+          $cacheBytes = (mongosh "$connstr" --eval "db.serverStatus().wiredTiger.cache['maximum bytes configured']" --quiet) -join "`n"
+          $cacheGb = [double]($cacheBytes -replace '[^\d.]+', '') / 1GB
+          Write-Host "WiredTiger cache: $([Math]::Round($cacheGb, 2)) GB"
+          if ([Math]::Abs($cacheGb - 1.0) -gt 0.1) {
+            throw "WiredTiger cache is not capped at 1GB (got $([Math]::Round($cacheGb, 2)) GB)."
+          }
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6.0.0
         with:

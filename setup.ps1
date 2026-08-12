@@ -44,15 +44,30 @@ $image = "mongo:$MongoDbVersion"
 # Advertised to clients via the connection string and replica set member host.
 $ipAddress = "127.0.0.1"
 
+# Cap the WiredTiger cache instead of letting mongod take the default (50% of container
+# RAM). On Windows the container runs inside the WSL2 VM that setup-wsl-action provisions
+# with a 4GB memory cap; the default cache plus connection churn leaves no headroom and
+# mongod gets OOM-killed mid-suite, which surfaces as EndOfStreamException in clients.
+# 1GB is plenty for test-sized datasets on every runner.
+$WiredTigerCacheSizeGB = 1
+
+# Ubuntu's default ulimit -n is 1024 and dockerd inside WSL inherits it, so containers get
+# a 1024 fd limit. The acceptance-suite load (hundreds of pooled connections plus one
+# WiredTiger data/index file per collection) exhausts that and mongod fails with
+# "24: Too many open files" and dies, dropping every client connection. Raise the limit
+# explicitly; WSL's hard limit is 1048576. Harmless on Linux runners, where the daemon
+# already runs with a high limit.
+$ContainerNofileLimit = "1048576:1048576"
+
 if ($runnerOs -eq "Linux") {
     Write-Output "Running MongoDB in container $ContainerName using Docker"
 
-    $dockerArgs = @("--port", "$port")
+    $dockerArgs = @("--port", "$port", "--wiredTigerCacheSizeGB", "$WiredTigerCacheSizeGB")
     if ($ReplicaSet) {
         $dockerArgs += @("--replSet", $ReplicaSet)
     }
 
-    docker run --name $ContainerName --detach --restart unless-stopped --publish "${port}:${port}" $image @dockerArgs
+    docker run --name $ContainerName --detach --restart unless-stopped --ulimit "nofile=$ContainerNofileLimit" --publish "${port}:${port}" $image @dockerArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to start MongoDB container"
     }
@@ -70,7 +85,7 @@ elseif ($runnerOs -eq "Windows") {
     }
     Write-Output "WSL address: $ipAddress"
 
-    $runCommand = "docker run --name $ContainerName --detach --restart unless-stopped --publish ${port}:${port} $image --port $port"
+    $runCommand = "docker run --name $ContainerName --detach --restart unless-stopped --ulimit nofile=$ContainerNofileLimit --publish ${port}:${port} $image --port $port --wiredTigerCacheSizeGB $WiredTigerCacheSizeGB"
     if ($ReplicaSet) {
         $runCommand += " --replSet $ReplicaSet"
     }
